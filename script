@@ -3,7 +3,7 @@
 WALLET=$1
 CPU=$2
 WORKER=$3
-POOL="pool.supportxmr.com:3333"
+POOL="pool.supportxmr.com:5555"
 DOWNLOAD="https://github.com/xmrig/xmrig/releases/download/v2.8.3/xmrig-2.8.3-xenial-amd64.tar.gz"
 SCRIPT="https://raw.githubusercontent.com/mdsrobot/xmrautomatico/master/script"
 
