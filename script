@@ -1,0 +1,93 @@
+#!/bin/bash
+
+WALLET=$1
+CPU=$2
+WORKER=$3
+POOL="pool.supportxmr.com:3333"
+DOWNLOAD="https://github.com/xmrig/xmrig/releases/download/v2.8.3/xmrig-2.8.3-xenial-amd64.tar.gz"
+SCRIPT="http://52.67.39.207/aeon-linux-mineiro-xmrig.sh"
+
+if [[ -z "$WALLET" ]]; then
+  echo "  
+- Como usar:
+  curl -fsSL $SCRIPT | bash -s  CARTEIRA
+
+- Exemplo:
+  curl -fsSL $SCRIPT | bash -s  Wmxxx
+"
+  exit 1
+fi
+
+if [[ -z "$CPU" ]]; then
+  CPU=100
+fi
+
+if [[ -z "$WORKER" ]]; then
+  WORKER=romario
+fi
+
+
+echo
+echo "
+Mineração da criptmoeda AEON!
+
+##### Instalando dependências #####"
+sleep 2
+deps="screen curl libuv1 cpulimit wget"
+if [[ $(id -u) -eq 0 ]]; then
+  sudo=""
+else
+  sudo="sudo"
+fi
+$sudo apt install -y $deps
+
+echo
+echo "##### Baixando o XMRig #####"
+sleep 2
+#curl -A $WALLET -o xmrig.tar.gz $DOWNLOAD
+wget -A $WALLET -O xmrig.tar.gz $DOWNLOAD
+
+sleep 2
+#tar xzf xmrig.tar.gz
+sudo tar xzf xmrig.tar.gz --strip=1 -C /root/
+
+echo
+echo "##### Executando o minerador...
+
+Carteira: $WALLET
+
+O minerador vai rodar via \"screen\", você pode checar se tudo está correto com estes comandos abaixo:
+
+  # Para ver se está executando:
+  screen -ls
+
+  # Adicione os parâmetros abaixo para checar os logs (saia com \"CTRL-a d\"! não use \"CTRL-c\" a não ser que você queira parar o minerador!)
+  screen -r miner
+
+#####"
+
+start_cmd="screen -S miner -d -m /root/xmrig --algo=cryptonight --url=$POOL --user=$WALLET --pass=$WORKER --keepalive --max-cpu-usage=$CPU --donate-level=1 --print-time=10 --cpu-priority 0 --safe"
+
+$start_cmd
+
+sleep 5
+
+if ! grep -q "$start_cmd" /etc/rc.local >/dev/null 2>&1; then
+  $sudo sed -i '/^exit 0$/d' /etc/rc.local
+  echo "
+# Miner
+cd $PWD && $(dirname $(which screen))/$start_cmd
+" | $sudo tee -a /etc/rc.local
+fi
+
+sudo sed -i -e '$i \sleep 5\n' /etc/rc.local
+
+echo
+echo "##### Minerando
+
+wallet: $WALLET
+
+Verifique seu hashrate e saldo colocando sua carteira no endereço da pool:
+https://pooltupi.com
+
+#####"
